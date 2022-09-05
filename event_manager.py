@@ -30,14 +30,21 @@ Logistics:
 
 class ExcelHandler(object):
 
-    def __init__(self, excel_path, col_mapper):
+    def __init__(self, excel_path):
         self.excel_path = excel_path
         if (not os.path.exists(self.excel_path)) and ('.xlsx' not in self.excel_path):
             print('Wrong excel path!!!')
             return
         self.wb = load_workbook(filename=excel_path)
         self.sheet = self.wb.active
-        self.col_mapper = col_mapper
+        self.col_mapper = {}
+        self.get_col_mapper()
+
+    def get_col_mapper(self):
+        self.col_mapper = {}
+        for cell_ in self.sheet[1]:
+            if cell_.value is not None:
+                self.col_mapper[cell_.value] = cell_.column_letter
 
     def update_cell(self, row, col_head, var):
         if col_head in self.col_mapper.keys():
@@ -94,13 +101,13 @@ class EventManager(object):
                 if self.manager_identifier in event['id']:
                     self.cal_events.append(event)
 
-    def read_excel(self, col_mapper):
+    def read_excel(self):
         excel_data = pd.read_excel(self.excel_path)
         self.events_df = pd.DataFrame(excel_data,
                                       columns=['ID', 'Date', 'Start Time', 'End Time', 'Event Title', 'Location',
                                                'Meeting Type', 'Error State', 'Need Update'])
         self.add_excel_events()
-        self.excel_writer = ExcelHandler(excel_path=self.excel_path, col_mapper=col_mapper)
+        self.excel_writer = ExcelHandler(excel_path=self.excel_path)
 
     def add_excel_events(self):
         self.excel_events = []  # so far I have to keep this since 1 excel can be processed at a time
@@ -234,8 +241,8 @@ class EventManager(object):
                 # self.events_df.loc[event['row_index'], 'Error State'] = 1
                 self.excel_writer.update_cell(row=event['row_index'], col_head='Error State', var=1)
 
-    def update_from_excel(self, col_mapper, allow_overlap=False):
-        self.read_excel(col_mapper)
+    def update_from_excel(self, allow_overlap=False):
+        self.read_excel()
         self.delete_events()
         self.update_events()
         self.add_events(allow_overlap)
