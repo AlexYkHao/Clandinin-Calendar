@@ -209,9 +209,9 @@ class EventManager(object):
     def remove_overlap(self, event):
         try:
             start_time = datetime.fromisoformat(event["start"]["dateTime"])
-            start_time = timezone('America/Los_Angeles').localize(start_time).isoformat()
+            start_time = timezone(self.TIME_ZONE).localize(start_time).isoformat()
             end_time = datetime.fromisoformat(event["end"]["dateTime"])
-            end_time = timezone('America/Los_Angeles').localize(end_time).isoformat()
+            end_time = timezone(self.TIME_ZONE).localize(end_time).isoformat()
             events_overlap_results = self.service.events().list(calendarId=self.calendar,
                                                                 timeMin=start_time,
                                                                 timeMax=end_time,
