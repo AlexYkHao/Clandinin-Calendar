@@ -57,6 +57,10 @@ class ExcelHandler(object):
         self.wb.save(filename=self.excel_path)
 
 
+def has_required_fields(body, requested_fields):
+    return all([pd.notna(body[field]) for field in requested_fields])
+
+
 class EventManager(object):
 
     def __init__(self, token, manager='manager_meet', excel_path=''):
@@ -119,6 +123,8 @@ class EventManager(object):
                     "start": None,
                     "end": None,
                     "location": None}
+            if not has_required_fields(row, ['Date', 'Start Time', 'End Time', 'Event Title']):
+                continue
             try:
                 event_date = row['Date'].to_pydatetime()
                 start_time = row['Start Time']
@@ -134,9 +140,9 @@ class EventManager(object):
             except:
                 print("Missing critical field in excel for an event!!!")
 
-            if (body["summary"] is not None) and (body["start"] is not None) and (body["end"] is not None):
+            if has_required_fields(body, ["summary", "start", "end"]):
                 if datetime.fromisoformat(body["start"]["dateTime"]) > datetime.now():
-                    if self.event_is_new(body) and not pd.isna(body["summary"]):
+                    if self.event_is_new(body):
                         event = {
                             'body': body,
                             'id': body['id'],
@@ -164,13 +170,13 @@ class EventManager(object):
     def find_events_to_update(self):
         self.events_to_update = []
         for event in self.excel_events:
-            if not pd.isna(event['id']) and not pd.isna(event['update']):
+            if pd.notna(event['id']) and pd.notna(event['update']):
                 self.events_to_update.append(event)
 
     def find_events_to_delete(self):
         self.events_to_delete = []
         self.pull_calendar_events()
-        excel_ids = [event['id'] for event in self.excel_events if not pd.isna(event['id'])]
+        excel_ids = [event['id'] for event in self.excel_events if pd.notna(event['id'])]
         for event in self.cal_events:
             if not (event['id'] in excel_ids):
                 self.events_to_delete.append(event)
