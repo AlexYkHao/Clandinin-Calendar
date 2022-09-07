@@ -164,7 +164,7 @@ class EventManager(object):
     def find_events_to_update(self):
         self.events_to_update = []
         for event in self.excel_events:
-            if not (pd.isna(event['id']) and pd.isna(event['update'])):
+            if not pd.isna(event['id']) and not pd.isna(event['update']):
                 self.events_to_update.append(event)
 
     def find_events_to_delete(self):
