@@ -105,7 +105,7 @@ class EventManager(object):
         excel_data = pd.read_excel(self.excel_path)
         self.events_df = pd.DataFrame(excel_data,
                                       columns=['ID', 'Date', 'Start Time', 'End Time', 'Event Title', 'Location',
-                                               'Meeting Type', 'Error State', 'Need Update'])
+                                               'Meeting Type', 'Topic / Notes', 'Error State', 'Need Update'])
         self.add_excel_events()
         self.excel_writer = ExcelHandler(excel_path=self.excel_path)
 
@@ -130,13 +130,13 @@ class EventManager(object):
                 body["end"] = {"dateTime": end_time, "timeZone": self.TIME_ZONE}
                 body["summary"] = row['Event Title']
                 body["location"] = row['Location']
-                # body["description"] = row['Meeting Type']
+                body["description"] = row['Topic / Notes']
             except:
                 print("Missing critical field in excel for an event!!!")
 
             if (body["summary"] is not None) and (body["start"] is not None) and (body["end"] is not None):
                 if datetime.fromisoformat(body["start"]["dateTime"]) > datetime.now():
-                    if self.event_is_new(body):
+                    if self.event_is_new(body) and not pd.isna(body["summary"]):
                         event = {
                             'body': body,
                             'id': body['id'],
